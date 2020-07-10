@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Encrypting Data With Web Crypto</title>
+    <script src="script.js"></script>
+  </head>
+  <body>
+    <div>
+      <p>Enter text to encrypt, click Encrypt, then enter a password when prompted.  A base64 representation of the encrypted data will be displayed.</p>
+      <input id="data" type="text" />
+      <button onclick="encrypt()">Encrypt</button>
+    </div>
+    <br/>
+    <div>
+      <textarea disabled id="encryptedData" rows="4" cols="40"></textarea></div>
+    <div>
+      <p>Click Decrypt and then enter the same password as used for encrypting.</p>
+      <input disabled id="decrypted" type="text" />
+      <button onclick="decrypt()">Decrypt</button>
+    </div>
+  </body>
+</html>
