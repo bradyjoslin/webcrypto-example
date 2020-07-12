@@ -1,33 +1,44 @@
-const buff_to_base64 = (buff) => btoa(String.fromCharCode.apply(null, buff));
+const buff_to_base64 = (buff: any) =>
+  btoa(String.fromCharCode.apply(null, buff));
 
-const base64_to_buf = (b64) =>
-  Uint8Array.from(atob(b64), (c) => c.charCodeAt(null));
+const base64_to_buf = (b64: string): Uint8Array =>
+  Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-async function encrypt() {
-  const data = window.document.getElementById("data").value;
-  let encryptedDataOut = window.document.getElementById("encryptedData");
-  const password = window.prompt("Password");
+async function encrypt(): Promise<void> {
+  const data = (<HTMLInputElement>window.document.getElementById("data")).value;
+  let encryptedDataOut = <HTMLInputElement>(
+    window.document.getElementById("encryptedData")
+  );
+  const password = window.prompt("Password") || "";
   const encryptedData = await encryptData(data, password);
   encryptedDataOut.value = encryptedData;
 }
 
-async function decrypt() {
-  const password = window.prompt("Password");
-  const encryptedData = window.document.getElementById("encryptedData").value;
-  let decryptedDataOut = window.document.getElementById("decrypted");
+async function decrypt(): Promise<void> {
+  const password = window.prompt("Password") || "";
+  const encryptedData = (<HTMLInputElement>(
+    window.document.getElementById("encryptedData")
+  )).value;
+  let decryptedDataOut = <HTMLInputElement>(
+    window.document.getElementById("decrypted")
+  );
   const decryptedData = await decryptData(encryptedData, password);
   decryptedDataOut.value = decryptedData || "decryption failed!";
 }
 
-const getPasswordKey = (password) =>
+const getPasswordKey = (password: string) =>
   window.crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, [
     "deriveKey",
   ]);
 
-const deriveKey = (passwordKey, salt, keyUsage) =>
+const deriveKey = (
+  passwordKey: CryptoKey,
+  salt: Uint8Array,
+  keyUsage: CryptoKey["usages"]
+): PromiseLike<CryptoKey> =>
   window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
@@ -41,7 +52,10 @@ const deriveKey = (passwordKey, salt, keyUsage) =>
     keyUsage
   );
 
-async function encryptData(secretData, password) {
+async function encryptData(
+  secretData: string,
+  password: string
+): Promise<string> {
   try {
     const salt = window.crypto.getRandomValues(new Uint8Array(16));
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -74,7 +88,10 @@ async function encryptData(secretData, password) {
   }
 }
 
-async function decryptData(encryptedData, password) {
+async function decryptData(
+  encryptedData: string,
+  password: string
+): Promise<string> {
   try {
     const encryptedDataBuff = base64_to_buf(encryptedData);
     const salt = encryptedDataBuff.slice(0, 16);
