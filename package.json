@@ -5,13 +5,19 @@
   "main": "./src/script.ts",
   "scripts": {
     "build": "tsc && cp public/* dist/",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "pretest": "serve dist/ > /dev/null 2>&1 &",
+    "test": "ava --verbose",
+    "posttest": "kill $(lsof -t -i:5000)",
+    "serve": "serve dist/",
     "transpile": "tsc --project ./test"
   },
   "author": "Brady Joslin [brady@bradyjoslin.com]",
   "license": "MIT",
   "devDependencies": {
+    "ava": "^3.10.1",
     "prettier": "^2.0.5",
+    "puppeteer": "^5.1.0",
+    "serve": "^11.3.2",
     "typescript": "^3.9.6"
   }
 }
