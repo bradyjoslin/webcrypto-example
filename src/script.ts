@@ -1,5 +1,5 @@
-const buff_to_base64 = (buff: any) =>
-  btoa(String.fromCharCode.apply(null, buff));
+const buff_to_base64 = (buff: Uint8Array) =>
+  btoa(String.fromCharCode.apply(null, Array.from(buff)));
 
 const base64_to_buf = (b64: string): Uint8Array =>
   Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
