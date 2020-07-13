@@ -13,7 +13,7 @@ test("page encrypts data", withPage, async (t, page) => {
       await page.evaluate(() => document.getElementById("encryptedData").value)
     );
   });
-  await page.click("body > div:nth-child(1) > button");
+  await page.click("#encrypt");
   await page.waitFor(500);
   let encryptedVal = await page.evaluate(
     () => document.getElementById("encryptedData").value
