@@ -13,7 +13,7 @@ async function encrypt(): Promise<void> {
     window.document.getElementById("encryptedData")
   );
   const password = window.prompt("Password") || "";
-  const encryptedData = await encryptData(data, password);
+  const encryptedData = await encryptData(data, password, 250000);
   encryptedDataOut.value = encryptedData;
 }
 
@@ -37,13 +37,14 @@ const getPasswordKey = (password: string) =>
 const deriveKey = (
   passwordKey: CryptoKey,
   salt: Uint8Array,
+  iterations: number,
   keyUsage: CryptoKey["usages"]
 ): PromiseLike<CryptoKey> =>
   window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: salt,
-      iterations: 250000,
+      iterations: iterations,
       hash: "SHA-256",
     },
     passwordKey,
@@ -54,13 +55,14 @@ const deriveKey = (
 
 async function encryptData(
   secretData: string,
-  password: string
+  password: string,
+  iterations: number
 ): Promise<string> {
   try {
     const salt = window.crypto.getRandomValues(new Uint8Array(16));
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const passwordKey = await getPasswordKey(password);
-    const aesKey = await deriveKey(passwordKey, salt, ["encrypt"]);
+    const aesKey = await deriveKey(passwordKey, salt, iterations, ["encrypt"]);
     const encryptedContent = await window.crypto.subtle.encrypt(
       {
         name: "AES-GCM",
@@ -71,20 +73,23 @@ async function encryptData(
     );
 
     const encryptedContentArr = new Uint8Array(encryptedContent);
+    let iterationsArr = new Uint8Array(enc.encode(iterations.toString()));
     let buff = new Uint8Array(
-      salt.byteLength + iv.byteLength + encryptedContentArr.byteLength
+      iterationsArr.byteLength +
+        salt.byteLength +
+        iv.byteLength +
+        encryptedContentArr.byteLength
     );
-    buff.set(new Uint8Array(salt), 0);
-    buff.set(new Uint8Array(iv), salt.byteLength);
-    buff.set(
-      new Uint8Array(encryptedContentArr),
-      salt.byteLength + iv.byteLength
-    );
+    let bytes = 0;
+    buff.set(iterationsArr, bytes);
+    buff.set(salt, (bytes += iterationsArr.byteLength));
+    buff.set(iv, (bytes += salt.byteLength));
+    buff.set(encryptedContentArr, (bytes += iv.byteLength));
     const base64Buff = buff_to_base64(buff);
     return base64Buff;
   } catch (e) {
     console.log(`Error - ${e}`);
-    return "";
+    throw Error();
   }
 }
 
@@ -94,11 +99,15 @@ async function decryptData(
 ): Promise<string> {
   try {
     const encryptedDataBuff = base64_to_buf(encryptedData);
-    const salt = encryptedDataBuff.slice(0, 16);
-    const iv = encryptedDataBuff.slice(16, 16 + 12);
-    const data = encryptedDataBuff.slice(16 + 12);
+    let bytes = 0;
+    const iterations = Number(
+      dec.decode(encryptedDataBuff.slice(bytes, (bytes += 6)))
+    );
+    const salt = new Uint8Array(encryptedDataBuff.slice(bytes, (bytes += 16)));
+    const iv = new Uint8Array(encryptedDataBuff.slice(bytes, (bytes += 12)));
+    const data = new Uint8Array(encryptedDataBuff.slice(bytes));
     const passwordKey = await getPasswordKey(password);
-    const aesKey = await deriveKey(passwordKey, salt, ["decrypt"]);
+    const aesKey = await deriveKey(passwordKey, salt, iterations, ["decrypt"]);
     const decryptedContent = await window.crypto.subtle.decrypt(
       {
         name: "AES-GCM",
