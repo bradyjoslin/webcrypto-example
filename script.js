@@ -60,8 +60,8 @@ async function encryptData(secretData, password) {
     let buff = new Uint8Array(
       salt.byteLength + iv.byteLength + encryptedContentArr.byteLength
     );
-    buff.set(new Uint8Array(salt), 0);
-    buff.set(new Uint8Array(iv), salt.byteLength);
+    buff.set(salt, 0);
+    buff.set(iv, salt.byteLength);
     buff.set(
       new Uint8Array(encryptedContentArr),
       salt.byteLength + iv.byteLength
