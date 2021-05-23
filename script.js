@@ -1,4 +1,7 @@
-const buff_to_base64 = (buff) => btoa(String.fromCharCode.apply(null, buff));
+// for large strings, use this from https://stackoverflow.com/a/49124600
+const buff_to_base64 = (buff) => btoa(new Uint8Array(buff).reduce(function (data, byte) {
+    return data + String.fromCharCode(byte);
+}, ''));
 
 const base64_to_buf = (b64) =>
   Uint8Array.from(atob(b64), (c) => c.charCodeAt(null));
